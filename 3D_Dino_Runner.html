@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Dino Runner</title>
+<style>
+body{margin:0;background:#222;overflow:hidden;font-family:Arial;color:white}
+canvas{display:block}
+#score{position:absolute;top:15px;left:15px;font-size:24px}
+#msg{position:absolute;top:50%;width:100%;text-align:center;font-size:28px}
+</style>
+</head>
+<body>
+<div id="score">Score: 0</div>
+<div id="msg">Tap or press Space to jump</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+let scene=new THREE.Scene();
+scene.background=new THREE.Color(0x87ceeb);
+let camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.1,1000);
+let renderer=new THREE.WebGLRenderer();
+renderer.setSize(innerWidth,innerHeight);
+document.body.appendChild(renderer.domElement);
+
+let light=new THREE.DirectionalLight(0xffffff,2); light.position.set(0,5,5); scene.add(light);
+scene.add(new THREE.AmbientLight(0xffffff,.5));
+
+let ground=new THREE.Mesh(new THREE.BoxGeometry(30,.2,200),new THREE.MeshLambertMaterial({color:0xd9b36c}));
+ground.position.z=-80; scene.add(ground);
+
+let dino=new THREE.Mesh(new THREE.BoxGeometry(1,1.5,1),new THREE.MeshLambertMaterial({color:0x228b22}));
+dino.position.set(0,.85,3); scene.add(dino);
+
+let obstacles=[];
+let jumping=false,vy=0,score=0,over=false;
+
+function addObstacle(){
+ let o=new THREE.Mesh(new THREE.BoxGeometry(.7,1.5,.7),new THREE.MeshLambertMaterial({color:0x008000}));
+ o.position.set((Math.random()-.5)*3,.75,-80);
+ scene.add(o); obstacles.push(o);
+}
+setInterval(()=>{if(!over)addObstacle()},1500);
+
+function jump(){
+ if(!jumping&&!over){jumping=true;vy=.18;document.getElementById("msg").style.display="none";}
+}
+addEventListener("keydown",e=>{if(e.code==="Space")jump()});
+addEventListener("touchstart",jump);
+
+camera.position.set(0,4,7); camera.lookAt(dino.position);
+
+function animate(){
+ requestAnimationFrame(animate);
+ if(!over){
+  dino.position.y+=vy; vy-=.01;
+  if(dino.position.y<=.85){dino.position.y=.85;jumping=false;}
+  obstacles.forEach(o=>{
+   o.position.z+=.35;
+   if(o.position.distanceTo(dino.position)<1){over=true;document.getElementById("msg").innerHTML="Game Over! Refresh to restart";}
+  });
+  score++; document.getElementById("score").innerHTML="Score: "+score;
+ }
+ renderer.render(scene,camera);
+}
+animate();
+</script>
+</body>
+</html>
